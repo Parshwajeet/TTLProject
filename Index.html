@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VidyaMitra — AI Career Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+/* ─── DESIGN SYSTEM ─────────────────────────────────────────────────── */
+:root {
+  --bg: #080b12;
+  --bg2: #0d1120;
+  --bg3: #111827;
+  --surface: rgba(255,255,255,0.04);
+  --surface2: rgba(255,255,255,0.08);
+  --border: rgba(255,255,255,0.08);
+  --border-hi: rgba(0,210,255,0.4);
+  --cyan: #00d2ff;
+  --violet: #7c3aed;
+  --violet-hi: #a78bfa;
+  --green: #10b981;
+  --red: #f43f5e;
+  --amber: #f59e0b;
+  --text: #e2e8f0;
+  --muted: #64748b;
+  --muted2: #94a3b8;
+  --sidebar-w: 260px;
+  --radius: 16px;
+  --mono: 'Space Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+  --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  font-family: var(--sans);
+  color: var(--text);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Noise texture overlay */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+/* ─── SIDEBAR ──────────────────────────────────────────────────────── */
+.sidebar {
+  position: fixed; left: 0; top: 0;
+  width: var(--sidebar-w);
+  height: 100vh;
+  background: rgba(8,11,18,0.95);
+  border-right: 1px solid var(--border);
+  padding: 32px 20px;
+  display: flex; flex-direction: column;
+  z-index: 100;
+  backdrop-filter: blur(20px);
+}
+.logo {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  padding: 0 12px;
+  margin-bottom: 36px;
+}
+.logo span { color: var(--cyan); }
+.logo em { color: var(--violet-hi); font-style: normal; }
+
+.nav-section {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+  padding: 0 12px;
+  margin-bottom: 8px;
+  margin-top: 20px;
+}
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  color: var(--muted2);
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  transition: var(--transition);
+  margin-bottom: 2px;
+}
+.nav-link i { width: 18px; text-align: center; font-size: 14px; }
+.nav-link:hover { color: var(--text); background: var(--surface2); }
+.nav-link.active {
+  color: var(--cyan);
+  background: rgba(0,210,255,0.08);
+  border: 1px solid rgba(0,210,255,0.15);
+}
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.user-chip {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px;
+  background: var(--surface);
+}
+.user-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--violet), var(--cyan));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; font-family: var(--mono);
+}
+.user-name { font-size: 13px; font-weight: 600; }
+.user-role { font-size: 11px; color: var(--muted); }
+
+/* ─── MAIN AREA ────────────────────────────────────────────────────── */
+.main {
+  margin-left: var(--sidebar-w);
+  padding: 40px 48px;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+.page { display: none; animation: fadeUp 0.4s ease both; }
+.page.active { display: block; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── TYPOGRAPHY ───────────────────────────────────────────────────── */
+.page-title {
+  font-family: var(--mono);
+  font-size: 30px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--cyan), var(--violet-hi));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+}
+.page-sub { color: var(--muted); font-size: 14px; margin-bottom: 36px; }
+
+/* ─── CARDS ────────────────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  margin-bottom: 24px;
+  transition: var(--transition);
+}
+.card:hover { border-color: rgba(0,210,255,0.2); }
+.card-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; color: var(--text); }
+
+/* ─── INPUTS ───────────────────────────────────────────────────────── */
+input, textarea, select {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  outline: none;
+  transition: var(--transition);
+  margin-top: 8px;
+  resize: vertical;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(0,210,255,0.1);
+}
+textarea { min-height: 120px; }
+
+/* ─── BUTTONS ──────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, var(--cyan), var(--violet));
+  border: none; border-radius: 50px;
+  color: white; font-family: var(--sans); font-size: 14px;
+  font-weight: 600; cursor: pointer;
+  transition: var(--transition);
+}
+.btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,210,255,0.25); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-ghost {
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  padding: 10px 20px;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: var(--transition);
+}
+.btn-ghost:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* ─── TAGS & BADGES ────────────────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 20px;
+  background: rgba(0,210,255,0.08);
+  color: var(--cyan); border: 1px solid rgba(0,210,255,0.2);
+}
+.badge-red { background: rgba(244,63,94,0.08); color: var(--red); border-color: rgba(244,63,94,0.2); }
+.badge-green { background: rgba(16,185,129,0.08); color: var(--green); border-color: rgba(16,185,129,0.2); }
+.badge-amber { background: rgba(245,158,11,0.08); color: var(--amber); border-color: rgba(245,158,11,0.2); }
+
+/* ─── GAP TAGS ─────────────────────────────────────────────────────── */
+.gap-tag {
+  display: inline-block;
+  background: rgba(244,63,94,0.08);
+  color: var(--red); padding: 5px 12px;
+  border-radius: 20px; font-size: 12px;
+  margin: 4px; border: 1px solid rgba(244,63,94,0.25);
+}
+.skill-tag {
+  display: inline-block;
+  background: rgba(16,185,129,0.08);
+  color: var(--green); padding: 5px 12px;
+  border-radius: 20px; font-size: 12px;
+  margin: 4px; border: 1px solid rgba(16,185,129,0.25);
+}
+
+/* ─── TIMELINE ─────────────────────────────────────────────────────── */
+.timeline { border-left: 2px solid rgba(0,210,255,0.3); padding-left: 24px; margin-left: 8px; }
+.step {
+  position: relative; margin-bottom: 24px;
+  padding: 16px; background: var(--surface);
+  border-radius: 12px; border: 1px solid var(--border);
+  transition: var(--transition);
+}
+.step:hover { border-color: var(--border-hi); }
+.step::before {
+  content: ''; position: absolute;
+  left: -31px; top: 20px;
+  width: 12px; height: 12px;
+  background: var(--cyan); border-radius: 50%;
+  box-shadow: 0 0 12px var(--cyan);
+}
+.step h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; color: var(--cyan); }
+.step p { font-size: 12px; color: var(--muted2); line-height: 1.6; }
+
+/* ─── SCORE CIRCLE ─────────────────────────────────────────────────── */
+.score-circle {
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  border: 4px solid var(--cyan);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 28px; font-weight: 700;
+  margin: 20px auto;
+  box-shadow: 0 0 32px rgba(0,210,255,0.2), inset 0 0 32px rgba(0,210,255,0.03);
+  background: var(--bg3);
+  color: var(--cyan);
+}
+.score-circle span { font-size: 11px; color: var(--muted); font-family: var(--sans); }
+
+/* ─── AI THINKING ANIMATION ────────────────────────────────────────── */
+.thinking {
+  display: flex; gap: 6px; align-items: center;
+  padding: 12px 16px;
+}
+.dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--cyan);
+  animation: bounce 1.2s infinite;
+}
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce {
+  0%,80%,100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+/* ─── CHAT BUBBLES ─────────────────────────────────────────────────── */
+.chat-area {
+  height: 420px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 16px;
+  padding: 16px; margin-bottom: 16px;
+  background: var(--bg);
+  border-radius: 12px; border: 1px solid var(--border);
+}
+.chat-area::-webkit-scrollbar { width: 4px; }
+.chat-area::-webkit-scrollbar-track { background: transparent; }
+.chat-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.bubble {
+  padding: 12px 16px; border-radius: 14px;
+  max-width: 80%; font-size: 14px; line-height: 1.6;
+}
+.bubble.bot {
+  background: var(--surface2);
+  color: var(--text);
+  border-bottom-left-radius: 4px;
+  align-self: flex-start;
+  border: 1px solid var(--border);
+}
+.bubble.user {
+  background: linear-gradient(135deg, var(--cyan), var(--violet));
+  color: white;
+  border-bottom-right-radius: 4px;
+  align-self: flex-end;
+  font-weight: 500;
+}
+
+/* ─── DASHBOARD GRID ───────────────────────────────────────────────── */
+.hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px; margin-top: 32px;
+}
+.hub-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative; overflow: hidden;
+}
+.hub-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  transform: scaleX(0); transform-origin: left;
+  transition: var(--transition);
+}
+.hub-card:hover::before { transform: scaleX(1); }
+.hub-card:hover { border-color: rgba(0,210,255,0.2); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+.hub-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: rgba(0,210,255,0.08);
+  border: 1px solid rgba(0,210,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; margin-bottom: 18px;
+}
+.hub-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+.hub-card p { font-size: 13px; color: var(--muted2); line-height: 1.6; margin-bottom: 20px; }
+.hub-tag {
+  position: absolute; top: 16px; right: 16px;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
+  background: var(--surface2); color: var(--muted);
+  padding: 3px 10px; border-radius: 20px;
+  border: 1px solid var(--border);
+}
+
+/* ─── PROGRESS BAR ─────────────────────────────────────────────────── */
+.progress-bar {
+  height: 6px; background: var(--bg3);
+  border-radius: 3px; overflow: hidden; margin-top: 8px;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  border-radius: 3px;
+  transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ─── QUIZ ─────────────────────────────────────────────────────────── */
+.quiz-option {
+  width: 100%; padding: 16px 20px;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text); border-radius: 12px;
+  cursor: pointer; text-align: left; font-family: var(--sans);
+  font-size: 14px; transition: var(--transition);
+  margin-bottom: 10px; display: flex; align-items: center; gap: 12px;
+}
+.quiz-option:hover { border-color: var(--cyan); background: rgba(0,210,255,0.05); color: var(--cyan); }
+.quiz-option.correct { border-color: var(--green); background: rgba(16,185,129,0.08); color: var(--green); }
+.quiz-option.wrong { border-color: var(--red); background: rgba(244,63,94,0.08); color: var(--red); }
+.quiz-option.selected { border-color: var(--cyan); background: rgba(0,210,255,0.08); }
+
+/* ─── RESUME PREVIEW ───────────────────────────────────────────────── */
+.resume-preview {
+  background: white; color: #1a1a1a;
+  padding: 40px; border-radius: 12px;
+  font-family: Georgia, serif;
+  font-size: 13px; line-height: 1.6;
+  position: sticky; top: 40px;
+  max-height: 80vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.resume-preview h1 { font-size: 22px; text-align: center; border-bottom: 2px solid #1a1a1a; padding-bottom: 8px; margin-bottom: 8px; }
+.resume-preview h2 { font-size: 13px; color: #555; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin: 14px 0 6px; }
+.resume-preview .contact { text-align: center; color: #555; font-size: 11px; margin-bottom: 12px; }
+
+/* ─── INTERVIEW TIMER ──────────────────────────────────────────────── */
+.timer-display {
+  font-family: var(--mono);
+  font-size: 32px; font-weight: 700;
+  text-align: center;
+  color: var(--cyan);
+  margin: 16px 0;
+}
+.timer-display.warn { color: var(--amber); }
+.timer-display.danger { color: var(--red); animation: pulse 0.5s infinite alternate; }
+@keyframes pulse { from { opacity: 1; } to { opacity: 0.5; } }
+
+/* ─── RESULT SECTION ───────────────────────────────────────────────── */
+.result-reveal { animation: fadeUp 0.6s ease both; }
+
+/* ─── SCROLLBAR ────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ─── GRID HELPERS ─────────────────────────────────────────────────── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.split-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+@media (max-width: 900px) {
+  .split-layout { grid-template-columns: 1fr; }
+  .grid-2 { grid-template-columns: 1fr; }
+}
+
+/* ─── DIVIDER ──────────────────────────────────────────────────────── */
+.divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+/* ─── TOOLTIP TIP ──────────────────────────────────────────────────── */
+.tip {
+  background: rgba(0,210,255,0.06);
+  border: 1px solid rgba(0,210,255,0.15);
+  border-radius: 10px; padding: 12px 16px;
+  font-size: 13px; color: var(--muted2);
+  line-height: 1.6;
+}
+.tip i { color: var(--cyan); margin-right: 8px; }
+
+/* ─── ANIMATED GRADIENT BG ─────────────────────────────────────────── */
+.glow-bg {
+  position: fixed;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124,58,237,0.06) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+  top: -100px; right: -200px;
+}
+.glow-bg2 {
+  position: fixed;
+  width: 400px; height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,210,255,0.04) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+  bottom: -50px; left: 100px;
+}
+
+/* ─── INTERVIEW PROGRESS PILLS ──────────────────────────────────────── */
+.q-pills { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+.q-pill {
+  width: 30px; height: 8px; border-radius: 4px;
+  background: var(--border); transition: var(--transition);
+}
+.q-pill.done { background: var(--cyan); }
+.q-pill.active { background: linear-gradient(90deg, var(--cyan), var(--violet)); }
+
+/* ─── ASSESSMENT DOMAIN BUTTONS ─────────────────────────────────────── */
+.domain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.domain-btn {
+  padding: 20px; background: var(--bg3);
+  border: 1px solid var(--border); border-radius: 14px;
+  color: var(--text); cursor: pointer; text-align: left;
+  font-family: var(--sans); transition: var(--transition);
+}
+.domain-btn:hover { border-color: var(--cyan); background: rgba(0,210,255,0.05); }
+.domain-btn.selected { border-color: var(--cyan); background: rgba(0,210,255,0.08); }
+.domain-icon { font-size: 28px; margin-bottom: 10px; display: block; }
+.domain-name { font-size: 14px; font-weight: 600; }
+.domain-desc { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+@media print {
+  .sidebar, .main > :not(#page-builder), nav { display: none; }
+  .resume-preview { box-shadow: none; max-height: none; position: static; }
+}
+</style>
+</head>
+<body>
+<div class="glow-bg"></div>
+<div class="glow-bg2"></div>
+
+<!-- ──────────────── SIDEBAR ──────────────────────────────────── -->
+<nav class="sidebar">
+  <div class="logo">Vidya<span>Mi</span><em>tra</em></div>
+
+  <div class="nav-section">Main</div>
+  <button class="nav-link active" onclick="goto('dashboard')" id="nav-dashboard">
+    <i class="fas fa-th-large"></i> Dashboard
+  </button>
+  <button class="nav-link" onclick="goto('evaluator')" id="nav-evaluator">
+    <i class="fas fa-search"></i> AI Evaluator
+  </button>
+  <button class="nav-link" onclick="goto('builder')" id="nav-builder">
+    <i class="fas fa-file-signature"></i> Resume Builder
+  </button>
+
+  <div class="nav-section">Tools</div>
+  <button class="nav-link" onclick="goto('assessment')" id="nav-assessment">
+    <i class="fas fa-brain"></i> Skill Quiz
+  </button>
+  <button class="nav-link" onclick="goto('roadmap')" id="nav-roadmap">
+    <i class="fas fa-map-signs"></i> Career Roadmap
+  </button>
+  <button class="nav-link" onclick="goto('interview')" id="nav-interview">
+    <i class="fas fa-microphone"></i> Mock Interview
+  </button>
+  <button class="nav-link" onclick="goto('chatbot')" id="nav-chatbot">
+    <i class="fas fa-robot"></i> AI Assistant
+  </button>
+
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="user-avatar" id="avatarInitial">S</div>
+      <div>
+        <div class="user-name" id="sidebarName">Student</div>
+        <div class="user-role">Career Learner</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ──────────────── MAIN CONTENT ─────────────────────────────── -->
+<main class="main">
+
+<!-- ═══════════════ PAGE: DASHBOARD ══════════════════════════════ -->
+<section class="page active" id="page-dashboard">
+  <h1 class="page-title">Control Center</h1>
+  <button onclick="testBackend()">Test Backend</button>
+  <p class="page-sub">Welcome back, <strong style="color:var(--text)" id="welcomeName">Student</strong>. Your AI-powered career platform awaits.</p>
+
+  <div class="hub-grid">
+    <div class="hub-card" onclick="goto('evaluator')">
+      <span class="hub-tag">AI Powered</span>
+      <div class="hub-icon">🔍</div>
+      <h3>AI Resume Evaluator</h3>
+      <p>Upload your skills or resume text and get an instant ATS score, skill gap analysis, and tailored recommendations.</p>
+      <button class="btn" style="font-size:13px; padding:10px 20px;">Start Evaluation →</button>
+    </div>
+    <div class="hub-card" onclick="goto('builder')">
+      <span class="hub-tag">Live Preview</span>
+      <div class="hub-icon">📝</div>
+      <h3>Resume Builder</h3>
+      <p>Create a professional one-page resume from scratch with live preview and instant PDF download.</p>
+      <button class="btn" style="font-size:13px; padding:10px 20px;">Build Resume →</button>
+    </div>
+    <div class="hub-card" onclick="goto('assessment')">
+      <span class="hub-tag">AI Quiz</span>
+      <div class="hub-icon">🧠</div>
+      <h3>Skill Assessment</h3>
+      <p>Not sure where to start? Take our AI-powered quiz to identify your strengths and best career path.</p>
+      <button class="btn" style="font-size:13px; padding:10px 20px;">Take Quiz →</button>
+    </div>
+    <div class="hub-card" onclick="goto('roadmap')">
+      <span class="hub-tag">Personalized</span>
+      <div class="hub-icon">📅</div>
+      <h3>Career Roadmap</h3>
+      <p>View your 4-phase upskilling planner. Structured path from student to industry-ready professional.</p>
+      <button class="btn" style="font-size:13px; padding:10px 20px;">View Roadmap →</button>
+    </div>
+    <div class="hub-card" onclick="goto('interview')">
+      <span class="hub-tag">Simulator</span>
+      <div class="hub-icon">🎤</div>
+      <h3>Mock Interview</h3>
+      <p>AI-driven technical and HR questions with instant feedback on your performance and confidence.</p>
+      <button class="btn" style="font-size:13px; padding:10px 20px;">Start Interview →</button>
+    </div>
+    <div class="hub-card" onclick="goto('chatbot')">
+      <span class="hub-tag">24/7 Agent</span>
+      <div class="hub-icon">🤖</div>
+      <h3>AI Assistant</h3>
+      <p>Ask anything about market trends, interview tips, career paths, or how to use VidyaMitra tools.</p>
+      <button class="btn" style="font-size:13px; padding:10px 20px;">Chat Now →</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:32px; text-align:center; border-color:rgba(124,58,237,0.2);">
+    <p style="font-size:13px; font-style:italic; color:var(--muted);">
+      <i class="fas fa-lightbulb" style="color:var(--amber); margin-right:8px;"></i>
+      Tip of the Day: Consistent learning is the key to career success. Spend 30 minutes daily on your Roadmap.
+    </p>
+  </div></section>
+
+<!-- ═══════════════ PAGE: AI EVALUATOR ═══════════════════════════ -->
+<section class="page" id="page-evaluator">
+  <h1 class="page-title">AI Resume Evaluator</h1>
+  <p class="page-sub">Let AI detect your skill gaps and boost your employability score.</p>
+
+  <div class="card">
+    <div class="card-title"><i class="fas fa-upload" style="color:var(--cyan);margin-right:8px;"></i>Paste Your Resume or Skills</div>
+    <div class="tip" style="margin-bottom:16px;">
+      <i class="fas fa-info-circle"></i>Paste your full resume text, or just list your skills and experience. The AI will analyse everything.
+    </div>
+    <textarea id="evalResumeText" placeholder="Example: Experienced in Python, SQL. Built a Rainfall Prediction model using Machine Learning. Know React basics. 2 years of freelance web dev..." style="min-height:160px;"></textarea>
+    <button class="btn" style="margin-top:16px; width:100%;" id="evalBtn" onclick="runEvaluation()">
+      <i class="fas fa-bolt"></i> Analyse with AI
+    </button>
+  </div>
+
+  <div id="evalResults" style="display:none;" class="result-reveal">
+    <div class="grid-2">
+      <div class="card" style="text-align:center;">
+        <div class="card-title">ATS Readiness Score</div>
+        <div class="score-circle" id="evalScore">—<span>%</span></div>
+        <p id="evalAdvice" style="font-size:13px; color:var(--muted2); line-height:1.6;"></p>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="fas fa-chart-bar" style="color:var(--cyan);margin-right:8px;"></i>Skill Strength Breakdown</div>
+        <div id="skillBars"></div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title"><i class="fas fa-exclamation-triangle" style="color:var(--red);margin-right:8px;"></i>Identified Skill Gaps</div>
+        <div id="gapContainer" style="margin-top:8px;"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="fas fa-star" style="color:var(--green);margin-right:8px;"></i>Detected Strengths</div>
+        <div id="strengthContainer" style="margin-top:8px;"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="fas fa-route" style="color:var(--violet-hi);margin-right:8px;"></i>AI Upskilling Roadmap</div>
+      <div class="timeline" id="evalRoadmap" style="margin-top:16px;"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ PAGE: RESUME BUILDER ══════════════════════════ -->
+<section class="page" id="page-builder">
+  <h1 class="page-title">Resume Builder</h1>
+  <p class="page-sub">Build a professional resume with live preview and PDF download.</p>
+
+  <div class="split-layout">
+    <!-- Form Side -->
+    <div>
+      <div class="card">
+        <div class="card-title">Personal Details</div>
+        <input type="text" id="rName" placeholder="Full Name" oninput="drawResume()">
+        <input type="text" id="rContact" placeholder="email@example.com | +91 9999999999 | linkedin.com/in/you" oninput="drawResume()">
+        <textarea id="rSummary" placeholder="Professional summary in 2–3 lines..." oninput="drawResume()" style="min-height:80px;"></textarea>
+      </div>
+      <div class="card">
+        <div class="card-title">Experience</div>
+        <textarea id="rExp" placeholder="Company Name — Role, Month Year – Month Year&#10;• Key responsibility or achievement&#10;• Another bullet point" oninput="drawResume()" style="min-height:100px;"></textarea>
+      </div>
+      <div class="card">
+        <div class="card-title">Projects</div>
+        <textarea id="rProj" placeholder="Project Title | Tech Stack Used&#10;• What it does and your contribution" oninput="drawResume()" style="min-height:100px;"></textarea>
+      </div>
+      <div class="card">
+        <div class="card-title">Education & Skills</div>
+        <input type="text" id="rEdu" placeholder="B.Tech CSE, XYZ University, 2025 — CGPA: 8.5" oninput="drawResume()">
+        <input type="text" id="rSkills" placeholder="Python, React, SQL, Machine Learning, Git" oninput="drawResume()" style="margin-top:10px;">
+        <input type="text" id="rCerts" placeholder="Certifications: AWS Cloud, Google ML Crash Course" oninput="drawResume()" style="margin-top:10px;">
+      </div>
+      <button class="btn" style="width:100%;" onclick="window.print()">
+        <i class="fas fa-download"></i> Download as PDF
+      </button>
+    </div>
+
+    <!-- Preview Side -->
+    <div>
+      <div class="resume-preview" id="resumePreview">
+        <h1 id="pName">YOUR NAME</h1>
+        <div class="contact" id="pContact">email | phone | linkedin</div>
+
+        <h2>PROFESSIONAL SUMMARY</h2>
+        <p id="pSummary" style="color:#333;font-size:12px;"></p>
+
+        <h2>EXPERIENCE</h2>
+        <pre id="pExp" style="font-size:11px;white-space:pre-wrap;font-family:Georgia,serif;color:#333;"></pre>
+
+        <h2>PROJECTS</h2>
+        <pre id="pProj" style="font-size:11px;white-space:pre-wrap;font-family:Georgia,serif;color:#333;"></pre>
+
+        <h2>EDUCATION</h2>
+        <p id="pEdu" style="font-size:12px;color:#333;"></p>
+
+        <h2>SKILLS</h2>
+        <p id="pSkills" style="font-size:12px;font-weight:bold;color:#333;"></p>
+
+        <h2>CERTIFICATIONS</h2>
+        <p id="pCerts" style="font-size:12px;color:#333;"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ PAGE: SKILL ASSESSMENT ════════════════════════ -->
+<section class="page" id="page-assessment">
+  <h1 class="page-title">Skill Assessment</h1>
+  <p class="page-sub">Discover your ideal career path through AI-analysed questions.</p>
+
+  <div id="assessStep1">
+    <div class="card">
+      <div class="card-title" style="margin-bottom:20px;">Step 1 — Choose your domain of interest</div>
+      <div class="domain-grid">
+        <button class="domain-btn" onclick="selectDomain('Web Development','🌐')">
+          <span class="domain-icon">🌐</span>
+          <div class="domain-name">Web Development</div>
+          <div class="domain-desc">Frontend, Backend, Full-stack</div>
+        </button>
+        <button class="domain-btn" onclick="selectDomain('Data Science','📊')">
+          <span class="domain-icon">📊</span>
+          <div class="domain-name">Data Science</div>
+          <div class="domain-desc">ML, Analytics, AI Research</div>
+        </button>
+        <button class="domain-btn" onclick="selectDomain('Cybersecurity','🔐')">
+          <span class="domain-icon">🔐</span>
+          <div class="domain-name">Cybersecurity</div>
+          <div class="domain-desc">Security, Ethical Hacking, SOC</div>
+        </button>
+        <button class="domain-btn" onclick="selectDomain('AI Engineering','🤖')">
+          <span class="domain-icon">🤖</span>
+          <div class="domain-name">AI Engineering</div>
+          <div class="domain-desc">LLMs, MLOps, Generative AI</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="assessStep2" style="display:none;">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <div class="card-title" id="quizDomainLabel">Domain Quiz</div>
+        <div class="badge" id="quizProgress">Q 1 / 5</div>
+      </div>
+      <div class="q-pills" id="qPills"></div>
+      <p id="assessQ" style="font-size:16px;font-weight:600;margin-bottom:20px;line-height:1.5;"></p>
+      <div id="assessOptions"></div>
+    </div>
+  </div>
+
+  <div id="assessStep3" style="display:none;" class="result-reveal">
+    <div class="card" style="text-align:center;">
+      <div style="font-size:48px;margin-bottom:16px;" id="assessEmoji">🎯</div>
+      <h2 style="font-size:20px;font-weight:700;margin-bottom:8px;">Assessment Complete!</h2>
+      <p style="color:var(--muted2);margin-bottom:20px;">You are a natural <strong id="assessResult" style="color:var(--cyan);"></strong></p>
+      <div class="score-circle" id="assessScore">0<span>%</span></div>
+      <p id="assessFeedback" style="font-size:14px;color:var(--muted2);max-width:500px;margin:16px auto 24px;line-height:1.6;"></p>
+      <div style="display:flex;gap:12px;justify-content:center;">
+        <button class="btn" onclick="goto('roadmap')"><i class="fas fa-map"></i> View My Roadmap</button>
+        <button class="btn-ghost" onclick="resetAssessment()">Retake Quiz</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ PAGE: CAREER ROADMAP ══════════════════════════ -->
+<section class="page" id="page-roadmap">
+  <h1 class="page-title">Career Roadmap</h1>
+  <p class="page-sub">Your personalised 4-phase journey to becoming industry-ready.</p>
+
+  <div class="card" style="margin-bottom:24px;">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <span style="font-size:14px;font-weight:500;">Generate roadmap for:</span>
+      <select id="roadmapPath" style="width:auto;margin-top:0;flex:1;min-width:200px;" onchange="loadRoadmap()">
+        <option value="Web Development">🌐 Web Development</option>
+        <option value="Data Science">📊 Data Science</option>
+        <option value="Cybersecurity">🔐 Cybersecurity</option>
+        <option value="AI Engineering">🤖 AI Engineering</option>
+      </select>
+      <button class="btn" style="padding:10px 20px;font-size:13px;" onclick="genAIRoadmap()">
+        <i class="fas fa-wand-magic-sparkles"></i> Generate with AI
+      </button>
+    </div>
+  </div>
+
+  <div id="roadmapContainer">
+    <div class="timeline" id="roadmapTimeline"></div>
+  </div>
+</section>
+
+<!-- ═══════════════ PAGE: MOCK INTERVIEW ══════════════════════════ -->
+<section class="page" id="page-interview">
+  <h1 class="page-title">Mock Interview</h1>
+  <p class="page-sub">AI-powered questions. Real-time evaluation. Know where you stand.</p>
+
+  <div id="interviewSetup">
+    <div class="card">
+      <div class="card-title">Interview Setup</div>
+      <div class="grid-2" style="margin-top:4px;">
+        <div>
+          <label style="font-size:13px;color:var(--muted);">Select Domain</label>
+          <select id="ivDomain" style="margin-top:6px;">
+            <option>Web Development</option>
+            <option>Data Science</option>
+            <option>Cybersecurity</option>
+            <option>AI Engineering</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:13px;color:var(--muted);">Difficulty Level</label>
+          <select id="ivLevel" style="margin-top:6px;">
+            <option>Beginner</option>
+            <option>Intermediate</option>
+            <option>Advanced</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn" style="margin-top:20px;width:100%;" onclick="startInterview()">
+        <i class="fas fa-play"></i> Begin Interview Session
+      </button>
+    </div>
+  </div>
+
+  <div id="interviewSession" style="display:none;">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="q-pills" id="ivPills"></div>
+        <span class="badge" id="ivQLabel">Q 1 / 5</span>
+      </div>
+      <div class="timer-display" id="ivTimer">05:00</div>
+      <div style="margin-bottom:12px;">
+        <span class="badge" id="ivType">TECHNICAL</span>
+      </div>
+      <p id="ivQuestion" style="font-size:17px;font-weight:600;line-height:1.5;margin-bottom:20px;"></p>
+      <textarea id="ivAnswer" placeholder="Type your detailed answer here..." style="min-height:140px;"></textarea>
+      <button class="btn" style="width:100%;margin-top:16px;" id="ivNextBtn" onclick="nextIVQuestion()">
+        Submit Answer & Continue <i class="fas fa-arrow-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <div id="interviewResults" style="display:none;" class="result-reveal">
+    <div class="card" style="text-align:center;">
+      <h2 class="page-title" style="font-size:24px;margin-bottom:8px;">Interview Complete!</h2>
+      <p style="color:var(--muted2);margin-bottom:20px;">Here's your AI performance report</p>
+      <div class="score-circle" id="ivScore">0<span>%</span></div>
+      <p id="ivComment" style="font-size:14px;color:var(--muted2);max-width:500px;margin:16px auto;line-height:1.6;"></p>
+    </div>
+    <div class="grid-2">
+      <div class="card" id="ivStrengthCard">
+        <div class="card-title"><i class="fas fa-thumbs-up" style="color:var(--green);margin-right:8px;"></i>Strengths Demonstrated</div>
+        <div id="ivStrengths" style="margin-top:8px;"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="fas fa-arrow-up" style="color:var(--amber);margin-right:8px;"></i>Areas to Improve</div>
+        <div id="ivImprovements" style="margin-top:8px;"></div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:8px;">
+      <button class="btn" onclick="resetInterview()"><i class="fas fa-redo"></i> Retake Interview</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ PAGE: AI CHATBOT ══════════════════════════════ -->
+<section class="page" id="page-chatbot">
+  <h1 class="page-title">AI Assistant</h1>
+  <p class="page-sub">Your 24/7 career advisor — ask anything.</p>
+
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div class="chat-area" id="chatArea">
+      <div class="bubble bot">
+        👋 Hi! I'm your VidyaMitra AI career assistant. I can help with resume tips, career paths, interview prep, job market insights, and more. What would you like to know?
+      </div>
+    </div>
+    <div style="padding:16px;border-top:1px solid var(--border);display:flex;gap:10px;">
+      <input type="text" id="chatInput" placeholder="Ask about resume tips, jobs, coding paths..." 
+        style="margin:0;flex:1;border-radius:10px;" 
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}">
+      <button class="btn" onclick="sendChat()" style="padding:12px 20px;flex-shrink:0;">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+
+  <div style="margin-top:16px;">
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Quick questions:</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn-ghost" onclick="quickChat('How do I improve my ATS resume score?')" style="font-size:12px;padding:8px 14px;">How to improve ATS score?</button>
+      <button class="btn-ghost" onclick="quickChat('What are the top skills for data science in 2025?')" style="font-size:12px;padding:8px 14px;">Top Data Science skills 2025</button>
+      <button class="btn-ghost" onclick="quickChat('How should I prepare for a system design interview?')" style="font-size:12px;padding:8px 14px;">System design prep tips</button>
+      <button class="btn-ghost" onclick="quickChat('What certifications are most valuable for cloud computing?')" style="font-size:12px;padding:8px 14px;">Best cloud certifications</button>
+    </div>
+  </div>
+</section>
+
+</main><!-- end .main -->
+
+<!-- ──────────────── JAVASCRIPT ───────────────────────────────── -->
+<script>
+// ─── NAVIGATION ──────────────────────────────────────────────────────
+const pages = ['dashboard','evaluator','builder','assessment','roadmap','interview','chatbot'];
+function goto(id) {
+  pages.forEach(p => {
+    document.getElementById('page-'+p).classList.remove('active');
+    document.getElementById('nav-'+p).classList.remove('active');
+  });
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('nav-'+id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (id === 'roadmap') loadRoadmap();
+}
+
+// ─── USER STATE ───────────────────────────────────────────────────────
+let userName = localStorage.getItem('username') || 'Student';
+document.getElementById('welcomeName').textContent = userName;
+document.getElementById('sidebarName').textContent = userName;
+document.getElementById('avatarInitial').textContent = userName[0].toUpperCase();
+
+// ─── CLAUDE API HELPER ────────────────────────────────────────────────
+async function callClaude(systemPrompt, userMessage, maxTokens = 900) {
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: maxTokens,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userMessage }]
+    })
+  });
+  const data = await response.json();
+  return data.content?.[0]?.text || '';
+}
+
+  async function testBackend() {
+  const res = await fetch("http://127.0.0.1:8010/test", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ message: "Hello from frontend" })
+  });
+
+  const data = await res.json();
+  console.log(data);
+  alert(data.message);
+}
+
+async function callClaudeJSON(systemPrompt, userMessage) {
+  const text = await callClaude(systemPrompt + '\n\nRespond ONLY with a raw JSON object. No markdown, no backticks, no explanation.', userMessage);
+  try {
+    return JSON.parse(text.replace(/```json|```/g, '').trim());
+  } catch {
+    return null;
+  }
+}
+
+// ═══ AI EVALUATOR ═════════════════════════════════════════════════════
+async function runEvaluation() {
+   const text = document.getElementById('evalResumeText').value.trim();
+   if (!text) { alert('Please paste your resume or skills first!'); return; }
+
+   const btn = document.getElementById('evalBtn');
+   btn.disabled = true;
+   btn.innerHTML = '<div class="thinking"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div> Analysing...';
+
+   try {
+     const response = await fetch('http://127.0.0.1:8010/evaluate', {
+       method: 'POST',
+       headers: {
+         'Content-Type': 'application/json'
+       },
+       body: JSON.stringify({ text })
+     });
+
+     const result = await response.json();
+     
+     btn.disabled = false;
+     btn.innerHTML = '<i class="fas fa-bolt"></i> Analyse with AI';
+
+     if (!result) { alert('AI analysis failed. Please try again.'); return; }
+
+     document.getElementById('evalResults').style.display = 'block';
+     document.getElementById('evalScore').innerHTML = result.score + '<span>%</span>';
+     document.getElementById('evalAdvice').textContent = result.advice;
+
+     // Gaps
+     const gc = document.getElementById('gapContainer');
+     gc.innerHTML = (result.gaps || []).map(g => `<span class="gap-tag">${g}</span>`).join('');
+
+     // Strengths
+     const sc = document.getElementById('strengthContainer');
+     sc.innerHTML = (result.strengths || []).map(s => `<span class="skill-tag">${s}</span>`).join('');
+
+     // Skill bars
+     const sb = document.getElementById('skillBars');
+     sb.innerHTML = (result.skillBreakdown || []).map(s => `
+       <div style="margin-bottom:14px;">
+         <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+           <span>${s.name}</span><span style="color:var(--cyan);">${s.score}%</span>
+         </div>
+         <div class="progress-bar"><div class="progress-fill" style="width:${s.score}%"></div></div>
+       </div>`).join('');
+
+     // Roadmap
+     const rm = document.getElementById('evalRoadmap');
+     rm.innerHTML = (result.roadmap || []).map(r => `
+       <div class="step"><h4>${r.phase}</h4><p>${r.desc}</p></div>`).join('');
+
+     document.getElementById('evalResults').scrollIntoView({ behavior: 'smooth' });
+   } catch (error) {
+     console.error('Error calling backend:', error);
+     btn.disabled = false;
+     btn.innerHTML = '<i class="fas fa-bolt"></i> Analyse with AI';
+     alert('Failed to connect to backend. Please make sure the server is running on http://127.0.0.1:8010');
+   }
+ }
+
+// ═══ RESUME BUILDER ═══════════════════════════════════════════════════
+function drawResume() {
+  const v = id => document.getElementById(id).value;
+  document.getElementById('pName').textContent = v('rName') || 'YOUR NAME';
+  document.getElementById('pContact').textContent = v('rContact') || 'email | phone | linkedin';
+  document.getElementById('pSummary').textContent = v('rSummary');
+  document.getElementById('pExp').textContent = v('rExp');
+  document.getElementById('pProj').textContent = v('rProj');
+  document.getElementById('pEdu').textContent = v('rEdu');
+  document.getElementById('pSkills').textContent = v('rSkills');
+  document.getElementById('pCerts').textContent = v('rCerts');
+}
+
+// ═══ SKILL ASSESSMENT ══════════════════════════════════════════════════
+let assessDomain = '';
+let assessQuestions = [];
+let assessIdx = 0;
+let assessCorrect = 0;
+
+const ASSESSMENT_QUESTIONS = {
+  'Web Development': [
+    { q: 'Which CSS property is used to create flexible layout containers?', options: ['display: flex', 'position: absolute', 'float: left', 'overflow: hidden'], correct: 0 },
+    { q: 'What does API stand for in web development?', options: ['Application Programming Interface', 'Advanced Page Indexing', 'Automated Protocol Integration', 'Array Processing Interface'], correct: 0 },
+    { q: 'Which JavaScript method is used to make asynchronous HTTP requests?', options: ['setTimeout()', 'fetch()', 'setInterval()', 'querySelector()'], correct: 1 },
+    { q: 'What is the purpose of a package.json file?', options: ['Stores CSS styles', 'Defines project metadata and dependencies', 'Manages database schemas', 'Handles routing logic'], correct: 1 },
+    { q: 'Which is NOT a JavaScript framework?', options: ['React', 'Vue', 'Django', 'Angular'], correct: 2 },
+  ],
+  'Data Science': [
+    { q: 'Which library is primarily used for numerical computing in Python?', options: ['Pandas', 'NumPy', 'Matplotlib', 'Scikit-learn'], correct: 1 },
+    { q: 'What is overfitting in machine learning?', options: ['Model performs well on train data but poorly on test data', 'Model is too simple to learn patterns', 'Training takes too long', 'Dataset is too small'], correct: 0 },
+    { q: 'Which algorithm is best for classification problems?', options: ['K-Means', 'Linear Regression', 'Random Forest', 'PCA'], correct: 2 },
+    { q: 'What does EDA stand for?', options: ['Exploratory Data Analysis', 'Extended Data Architecture', 'External Data Access', 'Error Detection Algorithm'], correct: 0 },
+    { q: 'Which metric is used for regression model evaluation?', options: ['Accuracy', 'F1 Score', 'RMSE', 'AUC-ROC'], correct: 2 },
+  ],
+  'Cybersecurity': [
+    { q: 'What does SQL Injection exploit?', options: ['Network vulnerabilities', 'Unsanitized database queries', 'Weak passwords', 'Physical access'], correct: 1 },
+    { q: 'What is a VPN primarily used for?', options: ['Speed up internet', 'Encrypt and tunnel network traffic', 'Block websites', 'Monitor users'], correct: 1 },
+    { q: 'Which is a symmetric encryption algorithm?', options: ['RSA', 'SHA-256', 'AES', 'Diffie-Hellman'], correct: 2 },
+    { q: 'What does "phishing" mean in cybersecurity?', options: ['Scanning open ports', 'Tricking users to reveal sensitive info', 'Breaking encryption', 'DoS attack method'], correct: 1 },
+    { q: 'What is a zero-day vulnerability?', options: ['A patched bug', 'An unknown flaw with no available fix', 'A scheduled security update', 'A firewall rule'], correct: 1 },
+  ],
+  'AI Engineering': [
+    { q: 'What is the purpose of the softmax function in neural networks?', options: ['Normalise inputs', 'Convert outputs to probabilities', 'Prevent overfitting', 'Initialise weights'], correct: 1 },
+    { q: 'What does "fine-tuning" an LLM mean?', options: ['Reducing model size', 'Training on domain-specific data', 'Deleting unused weights', 'Adding more layers'], correct: 1 },
+    { q: 'Which is NOT a common transformer architecture component?', options: ['Self-attention', 'Feed-forward layers', 'Convolutional pooling', 'Layer normalisation'], correct: 2 },
+    { q: 'What does RAG stand for in AI?', options: ['Random Augmentation Generator', 'Retrieval-Augmented Generation', 'Recurrent Attention Graph', 'Recursive Algorithm Grid'], correct: 1 },
+    { q: 'What is the role of an embedding model?', options: ['Generate images', 'Convert text to numerical vectors', 'Classify images', 'Compress files'], correct: 1 },
+  ]
+};
+
+function selectDomain(domain, emoji) {
+  assessDomain = domain;
+  localStorage.setItem('userPath', domain);
+  assessQuestions = ASSESSMENT_QUESTIONS[domain];
+  assessIdx = 0;
+  assessCorrect = 0;
+  document.getElementById('quizDomainLabel').textContent = emoji + ' ' + domain + ' Quiz';
+  buildQPills();
+  document.getElementById('assessStep1').style.display = 'none';
+  document.getElementById('assessStep2').style.display = 'block';
+  renderAssessQ();
+}
+
+function buildQPills() {
+  document.getElementById('qPills').innerHTML = assessQuestions.map((_, i) =>
+    `<div class="q-pill" id="qpill-${i}"></div>`).join('');
+}
+
+function renderAssessQ() {
+  const q = assessQuestions[assessIdx];
+  document.getElementById('assessQ').textContent = q.q;
+  document.getElementById('quizProgress').textContent = `Q ${assessIdx + 1} / ${assessQuestions.length}`;
+  document.getElementById('qpill-' + assessIdx).classList.add('active');
+  const opts = document.getElementById('assessOptions');
+  opts.innerHTML = q.options.map((o, i) =>
+    `<button class="quiz-option" onclick="checkAssessAnswer(${i})">
+      <span style="width:24px;height:24px;border-radius:50%;border:2px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${String.fromCharCode(65+i)}</span>
+      ${o}
+    </button>`).join('');
+}
+
+function checkAssessAnswer(idx) {
+  const q = assessQuestions[assessIdx];
+  const btns = document.querySelectorAll('.quiz-option');
+  btns.forEach(b => b.disabled = true);
+  if (idx === q.correct) {
+    btns[idx].classList.add('correct');
+    assessCorrect++;
+  } else {
+    btns[idx].classList.add('wrong');
+    btns[q.correct].classList.add('correct');
+  }
+  document.getElementById('qpill-' + assessIdx).classList.remove('active');
+  document.getElementById('qpill-' + assessIdx).classList.add('done');
+  setTimeout(() => {
+    assessIdx++;
+    if (assessIdx < assessQuestions.length) {
+      renderAssessQ();
+    } else {
+      showAssessResult();
+    }
+  }, 900);
+}
+
+function showAssessResult() {
+  const pct = Math.round((assessCorrect / assessQuestions.length) * 100);
+  document.getElementById('assessResult').textContent = assessDomain + ' Professional';
+  document.getElementById('assessScore').innerHTML = pct + '<span>%</span>';
+  document.getElementById('assessEmoji').textContent = pct >= 80 ? '🏆' : pct >= 60 ? '💡' : '📚';
+  const comments = {
+    high: `Excellent! You scored ${pct}% — you have strong fundamentals in ${assessDomain}. You're well-positioned for real-world roles. Check your personalised roadmap next.`,
+    mid: `Good effort! You scored ${pct}%. There are a few concepts to solidify. Review the specific areas you missed and use the Career Roadmap for structured learning.`,
+    low: `You scored ${pct}%. That's okay — everyone starts somewhere. We recommend the Career Roadmap to build your foundations step-by-step.`
+  };
+  document.getElementById('assessFeedback').textContent = pct >= 80 ? comments.high : pct >= 60 ? comments.mid : comments.low;
+  document.getElementById('assessStep2').style.display = 'none';
+  document.getElementById('assessStep3').style.display = 'block';
+}
+
+function resetAssessment() {
+  document.getElementById('assessStep3').style.display = 'none';
+  document.getElementById('assessStep2').style.display = 'none';
+  document.getElementById('assessStep1').style.display = 'block';
+}
+
+// ═══ CAREER ROADMAP ════════════════════════════════════════════════════
+const STATIC_ROADMAPS = {
+  'Web Development': [
+    { phase: 'Phase 1: Foundation', desc: 'Master HTML5, CSS3, and JavaScript ES6+. Learn responsive design with Flexbox and Grid. Build 3 static projects.' },
+    { phase: 'Phase 2: Framework Mastery', desc: 'Learn React.js for frontend and Node.js + Express for backend. Understand REST APIs, authentication (JWT), and databases (MongoDB/PostgreSQL).' },
+    { phase: 'Phase 3: Portfolio Building', desc: 'Build a full-stack MERN application (e.g., task manager, e-commerce clone). Deploy on Vercel/Railway. Contribute to open source on GitHub.' },
+    { phase: 'Phase 4: Industry Ready', desc: 'Learn DevOps basics (CI/CD, Docker). Get AWS or GCP certification. Practice DSA on LeetCode and do mock interviews weekly.' },
+  ],
+  'Data Science': [
+    { phase: 'Phase 1: Python & Math', desc: 'Master Python, NumPy, Pandas, and Matplotlib. Brush up on statistics, linear algebra, and probability fundamentals.' },
+    { phase: 'Phase 2: Machine Learning', desc: 'Learn Scikit-learn for classical ML. Study supervised/unsupervised algorithms. Complete Kaggle competitions to gain hands-on experience.' },
+    { phase: 'Phase 3: Deep Learning & Projects', desc: 'Learn TensorFlow or PyTorch. Build 2-3 end-to-end projects: NLP sentiment analysis, image classifier, time-series forecasting.' },
+    { phase: 'Phase 4: Industry Ready', desc: 'Learn MLOps (MLflow, model deployment with FastAPI). Get Google ML or AWS ML certifications. Build a public portfolio on GitHub and Kaggle.' },
+  ],
+  'Cybersecurity': [
+    { phase: 'Phase 1: Networking Fundamentals', desc: 'Master TCP/IP, DNS, HTTP/S, firewalls, and network architecture. Study CompTIA Network+ curriculum.' },
+    { phase: 'Phase 2: Security Concepts', desc: 'Learn cryptography, authentication, OWASP Top 10, and common attack vectors. Set up a home lab with Kali Linux and practice on TryHackMe.' },
+    { phase: 'Phase 3: Ethical Hacking & Tools', desc: 'Learn penetration testing with Metasploit, Burp Suite, Nmap, and Wireshark. Practice on HackTheBox CTF challenges.' },
+    { phase: 'Phase 4: Certification & SOC', desc: 'Earn CEH, OSCP, or CompTIA Security+ certifications. Apply for SOC analyst roles or bug bounty programs on HackerOne.' },
+  ],
+  'AI Engineering': [
+    { phase: 'Phase 1: ML & Python Mastery', desc: 'Deep dive into Python, NumPy, PyTorch. Understand gradient descent, backpropagation, and neural network fundamentals thoroughly.' },
+    { phase: 'Phase 2: Transformers & LLMs', desc: 'Study attention mechanisms, BERT, GPT architectures. Practice fine-tuning open-source LLMs (Llama, Mistral) using Hugging Face.' },
+    { phase: 'Phase 3: Build AI Products', desc: 'Build an end-to-end AI app using LangChain or LlamaIndex with RAG. Deploy with FastAPI + Docker. Publish open-source demos.' },
+    { phase: 'Phase 4: MLOps & Research', desc: 'Learn MLflow, Weights & Biases, and cloud ML services. Read recent arXiv papers. Apply for AI engineer or research roles at top companies.' },
+  ],
+};
+
+function loadRoadmap() {
+  const path = document.getElementById('roadmapPath').value;
+  const steps = STATIC_ROADMAPS[path] || [];
+  renderRoadmapSteps(steps);
+}
+
+function renderRoadmapSteps(steps) {
+  document.getElementById('roadmapTimeline').innerHTML = steps.map(s => `
+    <div class="step"><h4>${s.phase}</h4><p>${s.desc}</p></div>`).join('');
+}
+
+async function genAIRoadmap() {
+  const path = document.getElementById('roadmapPath').value;
+  const btn = event.target;
+  btn.disabled = true;
+  btn.innerHTML = '<div class="thinking" style="display:inline-flex;gap:4px;"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+
+  const result = await callClaudeJSON(
+    `You are a career roadmap expert. Generate a 4-phase personalised learning roadmap for the given career domain. Return a JSON array of 4 objects, each with "phase" (string, phase title) and "desc" (string, 2-3 sentence description of what to learn and do).`,
+    `Generate a roadmap for: ${path}`
+  );
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Generate with AI';
+
+  if (result && Array.isArray(result)) {
+    renderRoadmapSteps(result);
+  } else {
+    loadRoadmap();
+  }
+}
+
+// Auto-sync roadmap with assessment result
+const savedPath = localStorage.getItem('userPath');
+if (savedPath) {
+  const sel = document.getElementById('roadmapPath');
+  for (let opt of sel.options) { if (opt.value === savedPath) { opt.selected = true; break; } }
+}
+loadRoadmap();
+
+// ═══ MOCK INTERVIEW ════════════════════════════════════════════════════
+let ivQuestions = [];
+let ivIdx = 0;
+let ivAnswers = [];
+let ivTimer;
+let ivTimeLeft = 300;
+
+const IV_QUESTIONS = {
+  'Web Development': [
+    { type: 'TECHNICAL', q: 'Explain the difference between `==` and `===` in JavaScript with an example.' },
+    { type: 'TECHNICAL', q: 'What is the Virtual DOM in React and why is it beneficial?' },
+    { type: 'TECHNICAL', q: 'How does async/await differ from Promises in JavaScript?' },
+    { type: 'HR', q: 'Tell me about a challenging project you built and how you overcame the obstacles.' },
+    { type: 'HR', q: 'Where do you see yourself as a web developer in 2 years?' },
+  ],
+  'Data Science': [
+    { type: 'TECHNICAL', q: 'Explain the difference between supervised and unsupervised learning with examples.' },
+    { type: 'TECHNICAL', q: 'How would you handle a dataset with 40% missing values?' },
+    { type: 'TECHNICAL', q: 'What is the bias-variance trade-off and how do you balance it?' },
+    { type: 'HR', q: 'Describe a data project you are most proud of and your specific contribution.' },
+    { type: 'HR', q: 'How do you stay current with the fast-moving data science landscape?' },
+  ],
+  'Cybersecurity': [
+    { type: 'TECHNICAL', q: 'Explain how a Man-in-the-Middle attack works and how HTTPS prevents it.' },
+    { type: 'TECHNICAL', q: 'What is the difference between authentication and authorisation?' },
+    { type: 'TECHNICAL', q: 'Walk me through how you would conduct a basic web application penetration test.' },
+    { type: 'HR', q: 'Describe a situation where you identified a security risk and how you handled it.' },
+    { type: 'HR', q: 'How do you approach staying updated with new CVEs and threat intelligence?' },
+  ],
+  'AI Engineering': [
+    { type: 'TECHNICAL', q: 'Explain how attention mechanisms work in transformer models.' },
+    { type: 'TECHNICAL', q: 'What is RAG (Retrieval-Augmented Generation) and when would you use it over fine-tuning?' },
+    { type: 'TECHNICAL', q: 'How would you evaluate the quality of outputs from a large language model?' },
+    { type: 'HR', q: 'Tell me about an AI project you built end-to-end. What were the key challenges?' },
+    { type: 'HR', q: 'How do you think about responsible AI and avoiding harmful model outputs?' },
+  ],
+};
+
+function startInterview() {
+  const domain = document.getElementById('ivDomain').value;
+  ivQuestions = IV_QUESTIONS[domain] || IV_QUESTIONS['Web Development'];
+  ivIdx = 0; ivAnswers = []; ivTimeLeft = 300;
+
+  // Build pills
+  document.getElementById('ivPills').innerHTML = ivQuestions.map((_, i) =>
+    `<div class="q-pill" id="ivpill-${i}"></div>`).join('');
+
+  document.getElementById('interviewSetup').style.display = 'none';
+  document.getElementById('interviewSession').style.display = 'block';
+  renderIVQuestion();
+
+  clearInterval(ivTimer);
+  ivTimer = setInterval(() => {
+    ivTimeLeft--;
+    const m = Math.floor(ivTimeLeft / 60);
+    const s = ivTimeLeft % 60;
+    const el = document.getElementById('ivTimer');
+    el.textContent = `${m}:${s < 10 ? '0' + s : s}`;
+    el.className = 'timer-display' + (ivTimeLeft < 60 ? ' danger' : ivTimeLeft < 120 ? ' warn' : '');
+    if (ivTimeLeft <= 0) { clearInterval(ivTimer); finishInterview(); }
+  }, 1000);
+}
+
+function renderIVQuestion() {
+  const q = ivQuestions[ivIdx];
+  document.getElementById('ivType').textContent = q.type;
+  document.getElementById('ivQuestion').textContent = q.q;
+  document.getElementById('ivQLabel').textContent = `Q ${ivIdx + 1} / ${ivQuestions.length}`;
+  document.getElementById('ivAnswer').value = '';
+  document.getElementById('ivpill-' + ivIdx).classList.add('active');
+}
+
+async function nextIVQuestion() {
+  const ans = document.getElementById('ivAnswer').value.trim();
+  if (!ans) { alert('Please provide an answer before continuing.'); return; }
+
+  ivAnswers.push({ q: ivQuestions[ivIdx].q, a: ans });
+  document.getElementById('ivpill-' + ivIdx).classList.remove('active');
+  document.getElementById('ivpill-' + ivIdx).classList.add('done');
+  ivIdx++;
+
+  if (ivIdx < ivQuestions.length) {
+    renderIVQuestion();
+  } else {
+    clearInterval(ivTimer);
+    await finishInterview();
+  }
+}
+
+async function finishInterview() {
+  document.getElementById('interviewSession').style.display = 'none';
+
+  const btn = document.getElementById('ivNextBtn');
+  btn && (btn.disabled = true);
+
+  // Ask AI to evaluate
+  const domain = document.getElementById('ivDomain').value;
+  const qaText = ivAnswers.map((a, i) => `Q${i+1}: ${a.q}\nA: ${a.a}`).join('\n\n');
+
+  const result = await callClaudeJSON(
+    `You are an expert technical interviewer for ${domain} roles. Evaluate the following interview Q&A and return a JSON with:
+{
+  "score": <0-100 number>,
+  "comment": "<2-3 sentence summary of performance>",
+  "strengths": ["<strength 1>","<strength 2>","<strength 3>"],
+  "improvements": ["<area 1>","<area 2>","<area 3>"]
+}`,
+    qaText || 'No answers provided (time ran out).'
+  );
+
+  document.getElementById('interviewResults').style.display = 'block';
+
+  if (result) {
+    document.getElementById('ivScore').innerHTML = result.score + '<span>%</span>';
+    document.getElementById('ivComment').textContent = result.comment;
+    document.getElementById('ivStrengths').innerHTML = (result.strengths || []).map(s => `<div class="skill-tag" style="display:block;margin:4px 0;">${s}</div>`).join('');
+    document.getElementById('ivImprovements').innerHTML = (result.improvements || []).map(s => `<div class="gap-tag" style="display:block;margin:4px 0;">${s}</div>`).join('');
+  } else {
+    const rawScore = Math.min(100, Math.round((ivAnswers.length / ivQuestions.length) * 70 + Math.random() * 20));
+    document.getElementById('ivScore').innerHTML = rawScore + '<span>%</span>';
+    document.getElementById('ivComment').textContent = rawScore > 70 ? 'Good performance! Review the roadmap to go further.' : 'Keep practising. Use the AI chatbot to clarify concepts.';
+  }
+}
+
+function resetInterview() {
+  document.getElementById('interviewResults').style.display = 'none';
+  document.getElementById('interviewSetup').style.display = 'block';
+  clearInterval(ivTimer);
+}
+
+// ═══ AI CHATBOT ═════════════════════════════════════════════════════════
+const chatHistory = [
+  { role: 'user', content: 'Hi' },
+  { role: 'assistant', content: "👋 Hi! I'm your VidyaMitra AI career assistant. I can help with resume tips, career paths, interview prep, job market insights, and more. What would you like to know?" }
+];
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  appendBubble('user', msg);
+  chatHistory.push({ role: 'user', content: msg });
+
+  // Show thinking
+  const thinkId = 'think-' + Date.now();
+  const area = document.getElementById('chatArea');
+  area.innerHTML += `<div class="bubble bot" id="${thinkId}"><div class="thinking"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
+  area.scrollTop = area.scrollHeight;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 500,
+      system: `You are VidyaMitra, an expert AI career coach for Indian students and fresh graduates. You give concise, practical advice about resumes, job market trends, interview preparation, career paths (Web Dev, Data Science, Cybersecurity, AI Engineering), certifications, and upskilling. Keep responses under 200 words. Be encouraging and specific.`,
+      messages: chatHistory.slice(-10)
+    })
+  });
+
+  const data = await response.json();
+  const reply = data.content?.[0]?.text || "I'm having trouble connecting. Please try again!";
+  chatHistory.push({ role: 'assistant', content: reply });
+
+  document.getElementById(thinkId)?.remove();
+  appendBubble('bot', reply);
+}
+
+function appendBubble(role, text) {
+  const area = document.getElementById('chatArea');
+  const el = document.createElement('div');
+  el.className = 'bubble ' + role;
+  el.textContent = text;
+  area.appendChild(el);
+  area.scrollTop = area.scrollHeight;
+}
+
+function quickChat(msg) {
+  document.getElementById('chatInput').value = msg;
+  sendChat();
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────
+drawResume();
+loadRoadmap();
+
+</script>
+</body>
+</html>
